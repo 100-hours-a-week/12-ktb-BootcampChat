@@ -20,14 +20,9 @@ const corsOptions = {
   origin: [
     'https://bootcampchat-fe.run.goorm.site',
     'https://bootcampchat-hgxbv.dev-k8s.arkain.io',
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'http://localhost:3002',
-    'https://localhost:3000',
-    'https://localhost:3001',
-    'https://localhost:3002',
-    'http://0.0.0.0:3000',
-    'https://0.0.0.0:3000'
+    'https://goorm-ktb-012.goorm.team',
+    'https://api.goorm-ktb-012.goorm.team',
+    'https://drhz27js3v7om.cloudfront.net'
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -62,8 +57,8 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // 기본 상태 체크
-app.get('/health', (req, res) => {
-  res.json({ 
+app.get('/health', cors(), (req, res) => {
+  res.json({
     status: 'ok', 
     timestamp: new Date().toISOString(),
     env: process.env.NODE_ENV

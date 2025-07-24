@@ -1,5 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'export',
+  trailingSlash: true,
+
+  images: {
+    unoptimized: true,
+  },
+
   reactStrictMode: false, // 에러 처리 문제 해결을 위해 일시적으로 비활성화
   transpilePackages: ['@vapor-ui/core', '@vapor-ui/icons'],
   // 개발 환경에서의 에러 오버레이 설정

@@ -16,11 +16,15 @@
     "test": "cd e2e && npm test"
   },
   "devDependencies": {
+    "artillery": "^2.0.21",
     "concurrently": "^8.2.2"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@vapor-ui/core": "^0.3.1"
+    "@vapor-ui/core": "^0.3.1",
+    "axios": "^1.11.0",
+    "dotenv": "^17.2.0",
+    "openai": "^5.10.2"
   }
 }

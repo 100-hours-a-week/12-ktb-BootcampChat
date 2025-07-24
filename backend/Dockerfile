@@ -11,7 +11,6 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# 백엔드가 5001번 포트를 사용하도록 환경변수 설정
 ENV NODE_ENV=production
 ENV PORT=5001
 
