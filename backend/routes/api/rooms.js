@@ -4,6 +4,7 @@ const auth = require('../../middleware/auth');
 const Room = require('../../models/Room');
 const User = require('../../models/User');
 const { rateLimit } = require('express-rate-limit');
+const redisClient = require('../../utils/redisClient');
 let io;
 
 // 속도 제한 설정
@@ -82,8 +83,8 @@ router.get('/', [limiter, auth], async (req, res) => {
 
     // 정렬 설정
     const allowedSortFields = ['createdAt', 'name', 'participantsCount'];
-    const sortField = allowedSortFields.includes(req.query.sortField) 
-      ? req.query.sortField 
+    const sortField = allowedSortFields.includes(req.query.sortField)
+      ? req.query.sortField
       : 'createdAt';
     const sortOrder = ['asc', 'desc'].includes(req.query.sortOrder)
       ? req.query.sortOrder
@@ -185,11 +186,11 @@ router.get('/', [limiter, auth], async (req, res) => {
 router.post('/', auth, async (req, res) => {
   try {
     const { name, password } = req.body;
-    
+
     if (!name?.trim()) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        message: '방 이름은 필수입니다.' 
+        message: '방 이름은 필수입니다.'
       });
     }
 
@@ -204,7 +205,7 @@ router.post('/', auth, async (req, res) => {
     const populatedRoom = await Room.findById(savedRoom._id)
       .populate('creator', 'name email')
       .populate('participants', 'name email');
-    
+
     // Socket.IO를 통해 새 채팅방 생성 알림
     if (io) {
       io.to('room-list').emit('roomCreated', {
@@ -212,7 +213,7 @@ router.post('/', auth, async (req, res) => {
         password: undefined
       });
     }
-    
+
     res.status(201).json({
       success: true,
       data: {
@@ -222,17 +223,28 @@ router.post('/', auth, async (req, res) => {
     });
   } catch (error) {
     console.error('방 생성 에러:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: '서버 에러가 발생했습니다.',
-      error: error.message 
+      error: error.message
     });
   }
 });
 
 // 특정 채팅방 조회
 router.get('/:roomId', auth, async (req, res) => {
+  const cacheKey = `room:${req.params.roomId}`;
   try {
+    // 1. 캐시 조회
+    const cached = await redisClient.get(cacheKey);
+    if (cached) {
+      return res.json({
+        success: true,
+        data: { ...cached, password: undefined }
+      });
+    }
+
+    // 2. DB 조회
     const room = await Room.findById(req.params.roomId)
       .populate('creator', 'name email')
       .populate('participants', 'name email');
@@ -244,12 +256,12 @@ router.get('/:roomId', auth, async (req, res) => {
       });
     }
 
+    // 3. 캐시 저장
+    await redisClient.setEx(cacheKey, 30, room.toObject()); // 30초 캐시
+
     res.json({
       success: true,
-      data: {
-        ...room.toObject(),
-        password: undefined
-      }
+      data: { ...room.toObject(), password: undefined }
     });
   } catch (error) {
     console.error('Room fetch error:', error);
@@ -265,7 +277,7 @@ router.post('/:roomId/join', auth, async (req, res) => {
   try {
     const { password } = req.body;
     const room = await Room.findById(req.params.roomId).select('+password');
-    
+
     if (!room) {
       return res.status(404).json({
         success: false,
