@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  PdfIcon as FileText, 
-  ImageIcon as Image, 
-  MovieIcon as Film, 
-  CorrectOutlineIcon as CheckCheck, 
-  CorrectOutlineIcon as Check, 
-  MusicIcon as Music, 
-  ExternalLinkIcon as ExternalLink, 
+import {
+  PdfIcon as FileText,
+  ImageIcon as Image,
+  MovieIcon as Film,
+  CorrectOutlineIcon as CheckCheck,
+  CorrectOutlineIcon as Check,
+  MusicIcon as Music,
+  LinkOutlineIcon as ExternalLink,
   DownloadIcon as Download,
-  ErrorCircleIcon as AlertCircle 
+  ErrorCircleIcon as AlertCircle
 } from '@vapor-ui/icons';
 import { Button, Text, Callout } from '@vapor-ui/core';
 import PersistentAvatar from '../../common/PersistentAvatar';
@@ -18,9 +18,32 @@ import ReadStatus from '../ReadStatus';
 import fileService from '../../../services/fileService';
 import authService from '../../../services/authService';
 
-const FileMessage = ({ 
-  msg = {}, 
-  isMine = false, 
+const FileActions = ({ handleViewInNewTab, handleFileDownload }) => (
+  <div className="file-actions mt-2 pt-2 border-t border-gray-200">
+    <Button
+      size="sm"
+      variant="outline"
+      onClick={handleViewInNewTab}
+      title="새 탭에서 보기"
+    >
+      <ExternalLink size={16} />
+      <span>새 탭에서 보기</span>
+    </Button>
+    <Button
+      size="sm"
+      variant="outline"
+      onClick={handleFileDownload}
+      title="다운로드"
+    >
+      <Download size={16} />
+      <span>다운로드</span>
+    </Button>
+  </div>
+);
+
+const FileMessage = ({
+  msg = {},
+  isMine = false,
   currentUser = null,
   onReactionAdd,
   onReactionRemove,
@@ -70,14 +93,14 @@ const FileMessage = ({
   const getDecodedFilename = (encodedFilename) => {
     try {
       if (!encodedFilename) return 'Unknown File';
-      
+
       const base64 = encodedFilename
         .replace(/-/g, '+')
         .replace(/_/g, '/');
-      
+
       const pad = base64.length % 4;
       const paddedBase64 = pad ? base64 + '='.repeat(4 - pad) : base64;
-      
+
       if (paddedBase64.match(/^[A-Za-z0-9+/=]+$/)) {
         return Buffer.from(paddedBase64, 'base64').toString('utf8');
       }
@@ -90,7 +113,7 @@ const FileMessage = ({
   };
 
   const renderAvatar = () => (
-    <PersistentAvatar 
+    <PersistentAvatar
       user={isMine ? currentUser : msg.sender}
       size="md"
       className="flex-shrink-0"
@@ -102,7 +125,7 @@ const FileMessage = ({
     e.preventDefault();
     e.stopPropagation();
     setError(null);
-    
+
     try {
       if (!msg.file?.filename) {
         throw new Error('파일 정보가 없습니다.');
@@ -177,7 +200,7 @@ const FileMessage = ({
 
       return (
         <div className="bg-transparent-pattern">
-          <img 
+          <img
             src={previewUrl}
             alt={originalname}
             className="object-cover rounded-sm"
@@ -189,7 +212,7 @@ const FileMessage = ({
                 error: e.error,
                 originalname
               });
-              e.target.onerror = null; 
+              e.target.onerror = null;
               e.target.src = '/images/placeholder-image.png';
               setError('이미지를 불러올 수 없습니다.');
             }}
@@ -212,33 +235,10 @@ const FileMessage = ({
     const mimetype = msg.file?.mimetype || '';
     const originalname = getDecodedFilename(msg.file?.originalname || 'Unknown File');
     const size = fileService.formatFileSize(msg.file?.size || 0);
-    
-    const FileActions = () => (
-      <div className="file-actions mt-2 pt-2 border-t border-gray-200">
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={handleViewInNewTab}
-          title="새 탭에서 보기"
-        >
-          <ExternalLink size={16} />
-          <span>새 탭에서 보기</span>
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={handleFileDownload}
-          title="다운로드"
-        >
-          <Download size={16} />
-          <span>다운로드</span>
-        </Button>
-      </div>
-    );
 
-    const previewWrapperClass = 
+    const previewWrapperClass =
       "overflow-hidden";
-    const fileInfoClass = 
+    const fileInfoClass =
       "flex items-center gap-3 p-1 mt-2";
 
     if (mimetype.startsWith('image/')) {
@@ -251,7 +251,7 @@ const FileMessage = ({
               <span className="text-sm text-muted">{size}</span>
             </div>
           </div>
-          <FileActions />
+          <FileActions handleViewInNewTab={handleViewInNewTab} handleFileDownload={handleFileDownload} />
         </div>
       );
     }
@@ -261,7 +261,7 @@ const FileMessage = ({
         <div className={previewWrapperClass}>
           <div>
             {previewUrl ? (
-              <video 
+              <video
                 className="object-cover rounded-sm"
                 controls
                 preload="metadata"
@@ -284,7 +284,7 @@ const FileMessage = ({
               <span className="text-sm text-muted">{size}</span>
             </div>
           </div>
-          <FileActions />
+          <FileActions handleViewInNewTab={handleViewInNewTab} handleFileDownload={handleFileDownload} />
         </div>
       );
     }
@@ -300,7 +300,7 @@ const FileMessage = ({
           </div>
           <div className="px-3 pb-3">
             {previewUrl && (
-              <audio 
+              <audio
                 className="w-full"
                 controls
                 preload="metadata"
@@ -312,7 +312,7 @@ const FileMessage = ({
               </audio>
             )}
           </div>
-          <FileActions />
+          <FileActions handleViewInNewTab={handleViewInNewTab} handleFileDownload={handleFileDownload} />
         </div>
       );
     }
@@ -325,7 +325,7 @@ const FileMessage = ({
             <Text typography="body2" as="span">{size}</Text>
           </div>
         </div>
-        <FileActions />
+        <FileActions handleViewInNewTab={handleViewInNewTab} handleFileDownload={handleFileDownload} />
       </div>
     );
   };
@@ -364,13 +364,13 @@ const FileMessage = ({
             )}
           </div>
           <div className="message-footer">
-            <div 
-              className="message-time mr-3" 
+            <div
+              className="message-time mr-3"
               title={new Date(msg.timestamp).toLocaleString('ko-KR')}
             >
               {formattedTime}
             </div>
-            <ReadStatus 
+            <ReadStatus
               messageType={msg.type}
               participants={room.participants}
               readers={msg.readers}
@@ -381,7 +381,7 @@ const FileMessage = ({
             />
           </div>
         </div>
-        <MessageActions 
+        <MessageActions
           messageId={msg._id}
           messageContent={msg.content}
           reactions={msg.reactions}
@@ -390,7 +390,7 @@ const FileMessage = ({
           onReactionRemove={onReactionRemove}
           isMine={isMine}
           room={room}
-        />        
+        />
       </div>
     </div>
   );
