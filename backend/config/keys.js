@@ -14,4 +14,6 @@ module.exports = {
   redisPort: process.env.REDIS_PORT,
   openaiApiKey: process.env.OPENAI_API_KEY,
   vectorDbEndpoint: process.env.VECTOR_DB_ENDPOINT,
+  // 예시: REDIS_CLUSTER_NODES=host1,host2,host3,host4,host5,host6,host7,host8,host9
+  // 마스터 3개, 각 마스터당 슬레이브 2개씩 총 9개 노드
 };

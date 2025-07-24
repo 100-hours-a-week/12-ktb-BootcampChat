@@ -27,9 +27,9 @@ const corsOptions = {
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: [
-    'Content-Type', 
-    'Authorization', 
-    'x-auth-token', 
+    'Content-Type',
+    'Authorization',
+    'x-auth-token',
     'x-session-id',
     'Cache-Control',
     'Pragma'
@@ -59,7 +59,7 @@ if (process.env.NODE_ENV === 'development') {
 // 기본 상태 체크
 app.get('/health', cors(), (req, res) => {
   res.json({
-    status: 'ok', 
+    status: 'ok',
     timestamp: new Date().toISOString(),
     env: process.env.NODE_ENV
   });
@@ -96,7 +96,9 @@ app.use((err, req, res, next) => {
 });
 
 // 서버 시작
-mongoose.connect(process.env.MONGO_URI)
+mongoose.connect(process.env.MONGO_URI, {
+  readPreference: 'secondaryPreferred'
+})
   .then(() => {
     console.log('MongoDB Connected');
     server.listen(PORT, '0.0.0.0', () => {
