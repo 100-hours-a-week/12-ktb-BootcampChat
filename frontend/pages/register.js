@@ -72,11 +72,13 @@ const Register = () => {
 
   const validateForm = () => {
     const newErrors = [];
-    
+
     if (!formData.name?.trim()) {
       newErrors.push({ field: 'name', message: '이름을 입력해주세요.' });
+    } else if (formData.name.trim().length < 2) {
+      newErrors.push({ field: 'name', message: '이름은 2자 이상이어야 합니다.' });
     }
-    
+
     if (!formData.email?.trim()) {
       newErrors.push({ field: 'email', message: '이메일을 입력해주세요.' });
     } else {
@@ -85,26 +87,26 @@ const Register = () => {
         newErrors.push({ field: 'email', message: '올바른 이메일 형식이 아닙니다.' });
       }
     }
-    
+
     if (!formData.password) {
       newErrors.push({ field: 'password', message: '비밀번호를 입력해주세요.' });
     } else if (formData.password.length < 6) {
       newErrors.push({ field: 'password', message: '비밀번호는 6자 이상이어야 합니다.' });
     }
-    
+
     if (!formData.confirmPassword) {
       newErrors.push({ field: 'confirmPassword', message: '비밀번호 확인을 입력해주세요.' });
     } else if (formData.password !== formData.confirmPassword) {
       newErrors.push({ field: 'confirmPassword', message: '비밀번호가 일치하지 않습니다.' });
     }
-    
+
     setErrors(newErrors);
     return newErrors.length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -116,14 +118,14 @@ const Register = () => {
       const { name, email, password } = formData;
       // 회원가입
       await authService.register({ name, email, password });
-      
+
       // 바로 로그인 처리
       await authService.login({ email, password });
-      
+
       // 회원가입 성공 처리
       setShowSuccessModal(true);
       fireConfetti();
-      
+
       // 10초 후 채팅방 목록 페이지로 이동
       setTimeout(() => {
         router.push('/chat-rooms');
@@ -131,7 +133,7 @@ const Register = () => {
 
     } catch (err) {
       console.error('Registration error:', err);
-      
+
       if (err.response?.data?.errors) {
         setErrors(err.response.data.errors);
       } else if (err.response?.data?.message) {
@@ -151,7 +153,7 @@ const Register = () => {
   return (
     <div className="auth-container">
       <ReactCanvasConfetti refConfetti={getInstance} style={canvasStyles} />
-      
+
       <Card.Root className="auth-card">
         <Card.Body className="card-body">
           <Stack gap="300" align="center">
@@ -236,7 +238,7 @@ const Register = () => {
                 )}
 
               </Stack>
-              
+
               <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1.5rem' }}>
                 <Button
                   type="submit"
@@ -248,7 +250,7 @@ const Register = () => {
                   {loading ? '회원가입 중...' : '회원가입'}
                 </Button>
               </div>
-              
+
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '2rem' }}>
                 <Stack gap="100" align="center">
                   <Text typography="body3">이미 계정이 있으신가요?</Text>
@@ -287,12 +289,12 @@ const Register = () => {
                     ×
                   </Button>
                 </div>
-                
+
                 <div className="modal-body text-center py-4">
                   <h4 className="text-success mb-3">회원가입을 축하합니다!</h4>
                   <Text typography="body2" color="neutral-weak">10초 후 채팅방 목록으로 이동합니다.</Text>
                 </div>
-                
+
                 <div className="modal-footer">
                   <Button
                     color="primary"
