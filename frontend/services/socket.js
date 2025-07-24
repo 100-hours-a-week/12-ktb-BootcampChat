@@ -134,14 +134,14 @@ class SocketService {
 
     this.socket.on('connect_error', (error) => {
       console.error('[Socket] Connection error:', error);
-      
+
       if (error.message === 'Invalid session') {
         authService.refreshToken()
-          .then(() => this.reconnect())
-          .catch(() => {
-            authService.logout();
-            reject(error);
-          });
+            .then(() => this.reconnect())
+            .catch(() => {
+              authService.logout();
+              reject(error);
+            });
         return;
       }
 
@@ -244,8 +244,8 @@ class SocketService {
 
     if (error.message.includes('auth')) {
       authService.refreshToken()
-        .then(() => this.reconnect())
-        .catch(() => authService.logout());
+          .then(() => this.reconnect())
+          .catch(() => authService.logout());
       return;
     }
 
@@ -267,10 +267,10 @@ class SocketService {
     if (error.type === 'TransportError') {
       this.reconnect();
     }
-    
+
     if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('socketError', { 
-        detail: { error } 
+      window.dispatchEvent(new CustomEvent('socketError', {
+        detail: { error }
       }));
     }
   }
@@ -337,7 +337,7 @@ class SocketService {
       if (!this.socket?.connected) {
         await this.connect();
       }
-      
+
       return new Promise((resolve, reject) => {
         if (!this.socket?.connected) {
           reject(new Error('Socket is not connected'));
@@ -370,7 +370,7 @@ class SocketService {
       this.messageHandlers.set(event, callback);
       return;
     }
-    
+
     this.socket.on(event, callback);
     if (event === 'aiMessageChunk') {
       this.messageHandlers.set('aiMessageChunk', callback);
@@ -382,7 +382,7 @@ class SocketService {
       this.messageHandlers.delete(event);
       return;
     }
-    
+
     this.socket.off(event, callback);
     if (event === 'aiMessageChunk') {
       this.messageHandlers.delete('aiMessageChunk');
