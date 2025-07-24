@@ -1,60 +1,60 @@
 const mongoose = require('mongoose');
 
 const MessageSchema = new mongoose.Schema({
-  room: { 
-    type: String, 
+  room: {
+    type: String,
     required: [true, '채팅방 ID는 필수입니다.'],
     index: true
   },
-  content: { 
+  content: {
     type: String,
-    required: function() {
+    required: function () {
       return this.type !== 'file';
     },
     trim: true,
     maxlength: [10000, '메시지는 10000자를 초과할 수 없습니다.']
   },
-  sender: { 
-    type: mongoose.Schema.Types.ObjectId, 
+  sender: {
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    index: true 
+    index: true
   },
-  type: { 
-    type: String, 
-    enum: ['text', 'system', 'ai', 'file'], 
+  type: {
+    type: String,
+    enum: ['text', 'system', 'ai', 'file'],
     default: 'text',
     index: true
   },
   file: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'File',
-    required: function() {
+    required: function () {
       return this.type === 'file';
     }
   },
   aiType: {
     type: String,
     enum: ['wayneAI', 'consultingAI'],
-    required: function() { 
-      return this.type === 'ai'; 
+    required: function () {
+      return this.type === 'ai';
     }
   },
-  mentions: [{ 
+  mentions: [{
     type: String,
     trim: true
   }],
-  timestamp: { 
-    type: Date, 
+  timestamp: {
+    type: Date,
     default: Date.now,
-    index: true 
+    index: true
   },
   readers: [{
-    userId: { 
+    userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true
     },
-    readAt: { 
+    readAt: {
       type: Date,
       default: Date.now,
       required: true
@@ -80,13 +80,13 @@ const MessageSchema = new mongoose.Schema({
   }
 }, {
   timestamps: true,
-  toJSON: { 
+  toJSON: {
     virtuals: true,
-    getters: true 
+    getters: true
   },
-  toObject: { 
+  toObject: {
     virtuals: true,
-    getters: true 
+    getters: true
   }
 });
 
@@ -98,9 +98,10 @@ MessageSchema.index({ sender: 1 });
 MessageSchema.index({ type: 1 });
 MessageSchema.index({ timestamp: -1 });
 MessageSchema.index({ 'reactions.userId': 1 });
+MessageSchema.index({ room: 1, isDeleted: 1, timestamp: -1 });
 
 // 읽음 처리 Static 메소드 개선
-MessageSchema.statics.markAsRead = async function(messageIds, userId) {
+MessageSchema.statics.markAsRead = async function (messageIds, userId) {
   if (!messageIds?.length || !userId) return;
 
   const bulkOps = messageIds.map(messageId => ({
@@ -135,7 +136,7 @@ MessageSchema.statics.markAsRead = async function(messageIds, userId) {
 };
 
 // 리액션 처리 메소드 개선
-MessageSchema.methods.addReaction = async function(emoji, userId) {
+MessageSchema.methods.addReaction = async function (emoji, userId) {
   try {
     if (!this.reactions) {
       this.reactions = new Map();
@@ -147,7 +148,7 @@ MessageSchema.methods.addReaction = async function(emoji, userId) {
       this.reactions.set(emoji, userReactions);
       await this.save();
     }
-    
+
     return this.reactions.get(emoji);
   } catch (error) {
     console.error('Add reaction error:', {
@@ -160,21 +161,21 @@ MessageSchema.methods.addReaction = async function(emoji, userId) {
   }
 };
 
-MessageSchema.methods.removeReaction = async function(emoji, userId) {
+MessageSchema.methods.removeReaction = async function (emoji, userId) {
   try {
     if (!this.reactions || !this.reactions.has(emoji)) return;
 
     const userReactions = this.reactions.get(emoji) || [];
-    const updatedReactions = userReactions.filter(id => 
+    const updatedReactions = userReactions.filter(id =>
       id.toString() !== userId.toString()
     );
-    
+
     if (updatedReactions.length === 0) {
       this.reactions.delete(emoji);
     } else {
       this.reactions.set(emoji, updatedReactions);
     }
-    
+
     await this.save();
     return this.reactions.get(emoji);
   } catch (error) {
@@ -189,13 +190,13 @@ MessageSchema.methods.removeReaction = async function(emoji, userId) {
 };
 
 // 메시지 소프트 삭제 메소드 추가
-MessageSchema.methods.softDelete = async function() {
+MessageSchema.methods.softDelete = async function () {
   this.isDeleted = true;
   await this.save();
 };
 
 // 메시지 삭제 전 후크 개선
-MessageSchema.pre('remove', async function(next) {
+MessageSchema.pre('remove', async function (next) {
   try {
     if (this.type === 'file' && this.file) {
       const File = mongoose.model('File');
@@ -213,7 +214,7 @@ MessageSchema.pre('remove', async function(next) {
 });
 
 // 메시지 저장 전 후크 개선
-MessageSchema.pre('save', function(next) {
+MessageSchema.pre('save', function (next) {
   try {
     if (this.content && this.type !== 'file') {
       this.content = this.content.trim();
@@ -234,15 +235,15 @@ MessageSchema.pre('save', function(next) {
 });
 
 // JSON 변환 메소드 개선
-MessageSchema.methods.toJSON = function() {
+MessageSchema.methods.toJSON = function () {
   try {
     const obj = this.toObject();
-    
+
     // 불필요한 필드 제거
     delete obj.__v;
     delete obj.updatedAt;
     delete obj.isDeleted;
-    
+
     // reactions Map을 일반 객체로 변환
     if (obj.reactions) {
       obj.reactions = Object.fromEntries(obj.reactions);
